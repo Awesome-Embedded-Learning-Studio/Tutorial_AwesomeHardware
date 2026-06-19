@@ -81,4 +81,4 @@ bash scripts/gen-sidebar.sh
 
 ## 致谢
 
-感谢提供读书笔记线索的同学。
+感谢提供读书笔记的同学。
