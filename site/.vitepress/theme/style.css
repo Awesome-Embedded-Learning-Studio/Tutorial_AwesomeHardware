@@ -171,3 +171,140 @@ mjx-container {
     line-height: 1.7;
   }
 }
+
+/* ---------- 首页 Feature 卡片：入场动画 + hover 浮动（对齐 TAMCPP）---------- */
+@keyframes feature-fade-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.VPFeatures .item {
+  animation: feature-fade-up 0.65s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+.VPFeatures .item:nth-child(1) { animation-delay: 0ms; }
+.VPFeatures .item:nth-child(2) { animation-delay: 78ms; }
+.VPFeatures .item:nth-child(3) { animation-delay: 156ms; }
+.VPFeatures .item:nth-child(4) { animation-delay: 234ms; }
+.VPFeatures .item:nth-child(5) { animation-delay: 312ms; }
+.VPFeatures .item:nth-child(6) { animation-delay: 390ms; }
+@media (prefers-reduced-motion: reduce) {
+  .VPFeatures .item { animation: none; }
+}
+
+.VPFeatures { padding-top: 16px; padding-bottom: 48px; }
+
+.VPFeature {
+  border: 1px solid var(--vp-c-divider) !important;
+  border-radius: 14px !important;
+  background-color: var(--vp-c-bg) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
+  transition: border-color 0.39s ease, box-shadow 0.39s ease, transform 0.39s ease;
+}
+.VPFeature.link:hover {
+  border-color: var(--vp-c-brand-1) !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1), 0 4px 8px rgba(0, 0, 0, 0.06);
+  transform: translateY(-4px);
+}
+.VPFeature .box { padding: 28px 24px !important; }
+
+.VPFeature .icon {
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 12px !important;
+  background: var(--vp-c-brand-soft) !important;
+  color: var(--vp-c-brand-1) !important;
+  font-size: 22px !important;
+  transition: background 0.39s ease, color 0.39s ease, transform 0.39s ease;
+}
+.VPFeature.link:hover .icon { transform: scale(1.1); }
+
+.VPFeature .title {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  line-height: 1.5 !important;
+  color: var(--vp-c-text-1) !important;
+  transition: color 0.39s ease;
+}
+.VPFeature.link:hover .title { color: var(--vp-c-brand-1) !important; }
+
+.VPFeature .details {
+  font-size: 13px !important;
+  line-height: 1.7 !important;
+  color: var(--vp-c-text-2) !important;
+  font-weight: 400 !important;
+}
+
+.VPFeature .link-text-icon { transition: transform 0.39s ease; }
+.VPFeature.link:hover .link-text-icon { transform: translateX(4px); }
+
+/* ---------- 正文字号五档（FontSizeSwitcher 切 data-font-size，zoom 整页缩放）---------- */
+/* 用 CSS zoom 整页缩放：rem + 所有 px 字号一并跟随，等同浏览器 Ctrl+/-，避免只有正文跳动的割裂感。 */
+html[data-font-size='xxsmall'] { zoom: 0.85; }
+html[data-font-size='small'] { zoom: 0.92; }
+html[data-font-size='normal'] { zoom: 1; }
+html[data-font-size='large'] { zoom: 1.08; }
+html[data-font-size='xxlarge'] { zoom: 1.16; }
+
+/* ---------- 可拖拽侧栏（ResizableSidebar）---------- */
+:root {
+  --vp-aside-width: 256px; /* 右大纲栏宽度变量，默认与 VitePress 原值一致 */
+}
+.VPDoc.has-aside .aside {
+  max-width: var(--vp-aside-width);
+  position: relative; /* 给注入的 absolute handle 提供锚点 */
+}
+.VPDoc .aside-container {
+  width: calc(var(--vp-aside-width) - 32px);
+}
+
+/* 手柄公共态：常显一条 1px 淡灰细线（::before），悬浮/拖拽时变品牌色加粗。z-index 压在 sidebar 之上。 */
+.rs-handle {
+  z-index: calc(var(--vp-z-index-sidebar) + 1);
+  width: 8px;
+  background: transparent;
+  cursor: col-resize;
+}
+.rs-handle::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  transform: translateX(-50%);
+  background: var(--vp-c-divider);
+  transition: width 0.15s ease, background-color 0.15s ease;
+}
+.rs-handle:hover::before,
+.rs-handle.is-active::before {
+  width: 2px;
+  background: var(--vp-c-brand-1);
+}
+
+/* 左手柄：fixed。left 仅作 SSR 首屏 fallback，onMounted 后由 JS 读取 .VPSidebar 右边缘精确覆盖。 */
+.rs-handle--left {
+  position: fixed;
+  left: var(--vp-sidebar-width);
+  margin-left: -4px;
+  top: var(--vp-nav-height, 64px);
+  bottom: 0;
+}
+/* 右手柄：absolute 注入 .aside 内，居中压在其左边缘（默认隐藏，仅大屏显示） */
+.rs-handle--right {
+  position: absolute;
+  left: -4px;
+  top: 0;
+  bottom: 0;
+  display: none;
+}
+
+body.rs-resizing {
+  user-select: none;
+  cursor: col-resize;
+}
+
+@media (max-width: 959px) {
+  .rs-handle--left { display: none; }
+}
+@media (min-width: 1280px) {
+  .rs-handle--right { display: block; }
+}

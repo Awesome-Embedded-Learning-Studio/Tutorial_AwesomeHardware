@@ -6,15 +6,17 @@
   "description": "面向嵌入式学习者的硬件学习笔记站（VitePress）",
   "scripts": {
     "dev": "vitepress dev site",
-    "build": "tsx scripts/build.ts",
+    "check:bold": "tsx scripts/check_bold_rendering.ts",
+    "build": "pnpm check:bold && tsx scripts/build.ts",
     "build:single": "vitepress build site",
     "preview": "vitepress preview site"
   },
   "devDependencies": {
+    "markdown-it": "^14.2.0",
     "markdown-it-mathjax3": "^4.0.0",
     "mathjax-full": "^3.2.2",
     "tsx": "^4.21.0",
-    "vue": "^3.5.13",
-    "vitepress": "^1.6.3"
+    "vitepress": "^1.6.3",
+    "vue": "^3.5.13"
   }
 }

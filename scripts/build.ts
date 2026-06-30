@@ -90,8 +90,8 @@ export default defineConfig({
 }
 
 /** 构建单块：准备临时 src + 临时 site，跑 vitepress build，返回该块输出目录。 */
-async function buildChunk(kind: 'root' | { id: string; chapters: string[] }): Promise<string> {
-  const id = kind === 'root' ? 'root' : kind.id
+async function buildChunk(kind: 'root' | 'mcu' | { id: string; chapters: string[] }): Promise<string> {
+  const id = kind === 'root' ? 'root' : kind === 'mcu' ? 'mcu' : kind.id
   const srcDir = join(BUILD_TMP, `src-${id}`)
   const tmpSite = join(BUILD_TMP, `site-${id}`)
   const tmpSiteVp = join(tmpSite, '.vitepress')
@@ -104,6 +104,15 @@ async function buildChunk(kind: 'root' | { id: string; chapters: string[] }): Pr
       const s = join(TUTORIALS, f)
       if (existsSync(s)) cpSync(s, join(srcDir, f))
     }
+  } else if (kind === 'mcu') {
+    // 单片机硬件版块：整目录拷贝（体量小，不按章节号过滤）。
+    mkdirSync(join(srcDir, 'mcu'), { recursive: true })
+    const mcuSrc = join(TUTORIALS, 'mcu')
+    for (const f of readdirSync(mcuSrc)) {
+      cpSync(join(mcuSrc, f), join(srcDir, 'mcu', f))
+    }
+    const n = readdirSync(join(srcDir, 'mcu')).length
+    log(`  ${id}: ${n} files`)
   } else {
     mkdirSync(join(srcDir, 'power-electronics'), { recursive: true })
     for (const f of readdirSync(join(TUTORIALS, 'power-electronics'))) {
@@ -302,6 +311,13 @@ async function main() {
   cpSync(rootOut, DIST_FINAL, { recursive: true })
   chunkOutputs.push(rootOut)
   log('  root ✓')
+
+  // 1.5) mcu（单片机硬件版块）
+  logStep('构建 mcu（单片机硬件）')
+  const mcuOut = await buildChunk('mcu')
+  cpSync(mcuOut, DIST_FINAL, { recursive: true })
+  chunkOutputs.push(mcuOut)
+  log('  mcu ✓')
 
   // 2) 各章节组（串行，单进程峰值最低、最稳）
   for (const chunk of CHUNKS) {

@@ -4,6 +4,11 @@ import { viteHardwareEscape } from './plugins/vite-escape-hardware'
 import { fencePlugin } from './plugins/fence-plugin'
 import { mathjaxSafe } from './plugins/mathjax-safe'
 import { sidebar } from './config/sidebar'
+import { mcuSidebar } from './config/mcu-sidebar'
+import { getBuildInfo } from './config/build-info'
+
+// 模块加载时算一次（同一构建进程内一致）；非 git 仓库 / 无 tag 时回退 dev。
+const buildInfo = getBuildInfo()
 
 export default defineConfig({
   lang: 'zh-CN',
@@ -37,6 +42,19 @@ export default defineConfig({
   head: [
     ['meta', { name: 'theme-color', content: '#516be8' }],
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
+    // 首屏立即应用字号档（从 localStorage 读，默认 normal），防刷新闪烁。
+    // 与 FontSizeSwitcher.vue 的 STORAGE_KEY（'vp-font-size'）保持一致。
+    [
+      'script',
+      {},
+      `(function(){try{var s=localStorage.getItem('vp-font-size')||'normal';if(s!=='xxsmall'&&s!=='small'&&s!=='normal'&&s!=='large'&&s!=='xxlarge'){s='normal';}document.documentElement.dataset.fontSize=s;}catch(e){}})()`,
+    ],
+    // 首屏立即应用侧栏宽度（左导航 + 右大纲），防刷新闪烁。key 与 ResizableSidebar.vue 一致。
+    [
+      'script',
+      {},
+      `(function(){try{var w=parseInt(localStorage.getItem('vp-sidebar-width'));if(!w||w<200||w>480){w=272;}document.documentElement.style.setProperty('--vp-sidebar-width',w+'px');var a=parseInt(localStorage.getItem('vp-aside-width'));if(!a||a<180||a>360){a=256;}document.documentElement.style.setProperty('--vp-aside-width',a+'px');}catch(e){}})()`,
+    ],
   ],
 
   markdown: {
@@ -54,11 +72,13 @@ export default defineConfig({
 
     nav: [
       { text: '电源与功率变换', link: '/power-electronics/ch01' },
+      { text: '单片机硬件', link: '/mcu/' },
       { text: '关于本站', link: '/about' },
     ],
 
     sidebar: {
       '/power-electronics/': sidebar,
+      '/mcu/': mcuSidebar,
     },
 
     search: {
@@ -89,12 +109,19 @@ export default defineConfig({
     lightModeSwitchTitle: '切换到浅色模式',
     darkModeSwitchTitle: '切换到深色模式',
 
-    socialLinks: [{ icon: 'github', link: 'https://github.com/' }],
+    socialLinks: [
+      { icon: 'github', link: 'https://github.com/Awesome-Embedded-Learning-Studio/Tutorial_AwesomeHardware' },
+    ],
+
+    editLink: {
+      pattern:
+        'https://github.com/Awesome-Embedded-Learning-Studio/Tutorial_AwesomeHardware/edit/main/tutorials/:path',
+      text: '在 GitHub 上编辑此页',
+    },
 
     footer: {
-      message: '面向嵌入式学习者的硬件学习笔记',
-      copyright:
-        '本站内容为结合个人理解整理的学习笔记，不涉及对原书的复制或翻译。',
+      message: `${buildInfo.version} · ${buildInfo.sha} · ${buildInfo.date}`,
+      copyright: 'Copyright 2025-2026 AwesomeHardware · 结合个人理解整理的学习笔记',
     },
   },
 })
