@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitepress'
+import { execFileSync } from 'node:child_process'
 import mathjax3 from 'markdown-it-mathjax3'
 import { viteHardwareEscape } from './plugins/vite-escape-hardware'
 import { fencePlugin } from './plugins/fence-plugin'
@@ -123,5 +124,23 @@ export default defineConfig({
       message: `${buildInfo.version} · ${buildInfo.sha} · ${buildInfo.date}`,
       copyright: 'Copyright 2025-2026 AwesomeHardware · 结合个人理解整理的学习笔记',
     },
+  },
+
+  // VitePress 默认 lastUpdated 用 path.relative(root, file) 读 git;本站 srcDir 在 root 外
+  // (../tutorials),得到 ../tutorials/... 路径,git log 拒绝(root 外相对路径),文档页底部
+  // 「最后更新」不显示(issue #3)。这里用相对 cwd(root)的正确路径 tutorials/... 手动读,
+  // 直接写入 pageData.lastUpdated(毫秒,顶层字段),覆盖失败的自动读取,让 VitePress 正常渲染。
+  async transformPageData(pageData: { relativePath: string; lastUpdated?: number }) {
+    const rel = pageData.relativePath // 相对 srcDir,如 mcu/ch01_1.md
+    if (!rel) return
+    try {
+      const out = execFileSync('git', ['log', '-1', '--format=%ct', '--', `tutorials/${rel}`], {
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'ignore'],
+      }).trim()
+      if (out) pageData.lastUpdated = parseInt(out, 10) * 1000
+    } catch {
+      // 非 git 环境(如本地无 git)→ 静默,不阻塞 build
+    }
   },
 })
